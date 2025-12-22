@@ -13,9 +13,7 @@ app.use(ElementPlus);
 
 // 检查登录状态并通知主进程
 if (window.renderUtils) {
-  const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
-  window.renderUtils.sendMsg('check-login-status', { isLoggedIn });
+	const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
+	window.renderUtils.sendMsg('check-login-status', { isLoggedIn });
 }
-
 app.mount('#app');
-

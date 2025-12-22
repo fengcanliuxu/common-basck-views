@@ -93,6 +93,7 @@ const devBuildElectron = (options: IOptions) => {
 			server = server;
 
 			buildElectron().then(() => {
+				console.log('这里是否执行');
 				// 热更新就会打包，当前需要判断什么时候更新的是
 				server.httpServer?.once('listening', () => {
 					const addressInfo = server.httpServer!.address() as any;
@@ -117,6 +118,9 @@ const devBuildElectron = (options: IOptions) => {
 					startElectronServer(devUrl);
 				});
 			}
+		},
+		buildEnd() {
+			console.log('打包结束了');
 		},
 	};
 };

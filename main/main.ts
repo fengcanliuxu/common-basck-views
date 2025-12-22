@@ -2,20 +2,23 @@ import { app, BrowserWindow, ipcMain, IpcMainEvent, Tray, Menu, nativeImage } fr
 import path from 'path';
 
 let tray: Tray | null = null;
-
 let mainWindow: BrowserWindow;
 
 const createWindow = () => {
-	console.log(process.argv, '获取当前进程ss参11数');
 	mainWindow = new BrowserWindow({
 		width: 500, // 登录窗口宽度
 		height: 400, // 登录窗口高度
 		resizable: false, // 登录窗口不可调整大小
 		webPreferences: {
-			preload: process.argv[2],
+			preload: path.join(__dirname, '../preload/preload.cjs'),
 		},
 	});
-	mainWindow.loadURL(process.argv[3]);
+	if (process.argv[3]) {
+		mainWindow.loadURL(process.argv[3]);
+	} else {
+		mainWindow.loadFile(path.join(__dirname, '../renderer/index.html'));
+	}
+
 	mainWindow.once('ready-to-show', () => {
 		mainWindow!.show();
 		mainWindow!.webContents.openDevTools();
