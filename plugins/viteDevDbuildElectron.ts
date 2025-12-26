@@ -18,8 +18,6 @@ const devBuildElectron = (options: IOptions) => {
 	const mainPath = path.resolve(projectRoot, options.mainPath ?? './main/main.ts');
 	const preloadPath = path.resolve(projectRoot, options.preloadPath ?? './preload/preload.ts');
 	const outPath = path.resolve(projectRoot, options.dirPath ?? './dist');
-	const originMain = path.basename(mainPath ?? '');
-	const originPreload = path.basename(preloadPath ?? '');
 
 	let electronProcess: any;
 	let devUrl = '';
@@ -111,10 +109,13 @@ const devBuildElectron = (options: IOptions) => {
 		},
 
 		handleHotUpdate(ctx: HmrContext) {
-			if (originMain === path.basename(ctx.file) || originPreload === path.basename(ctx.file)) {
-				// 重新打包当前文件，重新执行
+			console.log(ctx.file, '当前');
+			const curFile = ctx.file;
+			if (!curFile.includes('dist') && (curFile.includes('main') || curFile.includes('preload'))) {
 				if (electronProcess) electronProcess.kill();
 				buildElectron().then(() => {
+					console.log('没有运行起来？');
+
 					startElectronServer(devUrl);
 				});
 			}

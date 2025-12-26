@@ -7,10 +7,19 @@ import Components from 'unplugin-vue-components/vite';
 import Icons from 'unplugin-icons/vite';
 import IconsResolver from 'unplugin-icons/resolver';
 import { ElementPlusResolver } from 'unplugin-vue-components/resolvers';
+import path, { dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import UnoCSS from 'unocss/vite';
 
+const __dirname = dirname(fileURLToPath(import.meta.url));
 // https://vite.dev/config/
 export default defineConfig({
 	base: './',
+	resolve: {
+		alias: {
+			'@': path.resolve(__dirname, 'src'), // ✅ 推荐使用 path.resolve
+		},
+	},
 	plugins: [
 		vue(),
 		devBuildElectron({}),
@@ -43,8 +52,10 @@ export default defineConfig({
 			compiler: 'vue3',
 			autoInstall: true,
 		}),
+		UnoCSS(),
 	],
 	build: {
 		outDir: 'dist/renderer',
+		rollupOptions: {},
 	},
 });

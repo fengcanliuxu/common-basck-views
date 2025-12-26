@@ -5,3 +5,7 @@ declare global {
 	}
 	const renderUtils: RenderUtils;
 }
+
+interface File {
+	path: string;
+}
