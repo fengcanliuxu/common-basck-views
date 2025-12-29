@@ -93,13 +93,11 @@ class IpcMainManage {
 
 						if (itemRes) {
 							if (!res[itemRes.label]) {
-								res[itemRes.label] = {
-									children: {},
-								};
+								res[itemRes.label] = {};
 							}
 							// 找到下一个
 							let child = itemRes[itemRes.label];
-							let temp = res[itemRes.label].children;
+							let temp = res[itemRes.label];
 
 							while (child?.label) {
 								temp.children = temp.children || {};
