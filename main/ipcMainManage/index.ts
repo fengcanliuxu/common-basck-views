@@ -30,53 +30,91 @@ class IpcMainManage {
 		});
 	}
 
-	transArrToTree(arr){
-		const res = {};
-		arr.forEach((item:string) => {
-	
-		})
+	/**
+	 * 将当前链行数据转换为对象类型
+	 * @param arr
+	 */
+	transArrToTree(arr: string[]) {
+		const res: { label: string; [key: string]: string | Record<string, unknown> } = {
+			label: '',
+		};
+		let temp: { label: string; [key: string]: string | Record<string, unknown> } = {
+			label: '',
+		};
+		if (arr.length === 1) {
+			res.content = arr[0] as string;
+		}
+		arr.forEach((item: string, index: number) => {
+			if (index === 0) {
+				res.label = item;
+				res[item] = temp;
+			} else {
+				if (index !== arr.length - 1) {
+					temp[item] = {};
+				}
+				temp.label = item;
+				temp = temp[item] as any;
+			}
+		});
+		return res;
 	}
 
 	openFolder() {
-		ipcMain.handle('open-folder', () => {
-			const res = {};
-			const path = dialog.showOpenDialogSync(this.curWindow, {
+		ipcMain.handle('open-folder', async () => {
+			const res: {
+				label?: string[];
+				children?: Record<string, any>;
+				[key: string]: any;
+			} = {};
+			const filePath = dialog.showOpenDialogSync(this.curWindow, {
 				title: '请选择文件夹',
 				properties: ['openFile', 'openDirectory'],
 			});
-			if (!path) {
+			if (!filePath) {
 				return '读取文件失败';
-			} else if (Array.isArray(path) && path.length > 0) {
-				fs.stat(path[0], async (err, stats) => {
-					if (stats.isDirectory()) {
-						// 是文件夹 读取文件夹内容
-						await fs.readdir(
-							path[0],
-							{
-								recursive: true,
-							},
-							(_err, files) => {
-								console.log(files, '当前所有文件');
-								// 对当前文件结构进行解析
-								files.forEach((element) => {
-									// 转换为一个树状结构，当前可以看到对应的属性
-									const temp = element.split('\\');
-									for(let i = 0; i < temp.length; i  ++){
-										if(i === 0){
-											res[temp[i]].
-										}
-									}
-								});
-							}
-						);
-					}
-				});
-			}
-			// 获取文件夹中所有内容
+			} else if (Array.isArray(filePath) && filePath.length > 0) {
+				const stats = await fs.statSync(filePath[0]!);
 
-			return {
-				folder: path,
-			};
+				if (stats.isDirectory()) {
+					// 是文件夹 读取文件夹内容
+					const fileContent = await fs.readdirSync(filePath[0]!, {
+						recursive: true,
+					});
+					let splitS = '\\';
+					const curSystem = process.platform;
+					if (curSystem === 'linux') {
+						splitS = '\\';
+					}
+
+					// 对当前文件结构进行解析
+					fileContent.forEach((element: any) => {
+						const pathArr = element.split(splitS);
+						const itemRes = this.transArrToTree(pathArr) as any;
+
+						if (itemRes) {
+							if (!res[itemRes.label]) {
+								res[itemRes.label] = {};
+							}
+							// 找到下一个
+							let child = itemRes[itemRes.label];
+							let temp = res[itemRes.label];
+
+							while (child?.label) {
+								temp.children = temp.children || {};
+								if (!temp.children?.label) {
+									temp.children.label = child.label;
+								}
+								temp.children[child.label] ? (temp = temp.children[child.label]) : (temp.children[child.label] = temp = {});
+								child = child[child.label];
+							}
+						}
+					});
+				}
+			}
+			fs.writeFileSync('./test.json', JSON.stringify(res, null, 2), 'utf-8');
+			console.log(res, 'file');
+			// 获取文件夹中所有内容
+			return res;
 		});
 	}
 }
