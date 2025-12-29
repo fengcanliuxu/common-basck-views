@@ -29,13 +29,7 @@
 					文件列表
 					<el-empty description="请拖入视频或者点击打开文件夹" />
 				</div>
-				<el-descriptions title="文件列表" :column="1" v-else>
-					<el-descriptions-item class="test" v-for="(src, index) in videoList" :key="src.path" :label-width="0">
-						<div @click="playVideo(index)" class="video-name">
-							{{ src.name }}
-						</div></el-descriptions-item
-					>
-				</el-descriptions>
+				<el-tree-v2 :data="fileList" :highlight-current="true" label> </el-tree-v2>
 			</el-splitter-panel>
 		</el-splitter>
 	</div>
@@ -71,7 +65,7 @@
 	const openFolder = async () => {
 		const folder = await renderUtils.invokeMsg('open-folder');
 		console.log(folder, '当前选择文件');
-
+		fileList.value = folder;
 		return folder;
 	};
 
