@@ -5,6 +5,10 @@ import pinia from './stores';
 import ElementPlus from 'element-plus';
 import 'element-plus/dist/index.css';
 import 'virtual:uno.css';
+import 'element-plus/theme-chalk/dark/css-vars.css';
+
+import './style/reset.less';
+
 const app = createApp(App);
 
 app.use(router);

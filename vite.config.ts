@@ -33,7 +33,7 @@ export default defineConfig({
 					prefix: 'Icon',
 				}),
 			],
-			imports: ['vue', 'vue-router', 'pinia'],
+			imports: ['vue', 'vue-router', 'pinia', '@vueuse/core'],
 			dts: 'types/auto-imports.d.ts',
 		}),
 		Components({

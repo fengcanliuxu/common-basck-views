@@ -1,6 +1,9 @@
 import { BrowserWindow, ipcMain, type IpcMainEvent, dialog } from 'electron';
 import fs from 'node:fs';
 import path from 'node:path';
+import { pathToFileURL } from 'node:url';
+import { transArrToTree } from '../utils';
+import os from 'node:os';
 class IpcMainManage {
 	private curWindow: BrowserWindow;
 	constructor(curWindow: BrowserWindow) {
@@ -11,6 +14,9 @@ class IpcMainManage {
 			this.closeWindow();
 			this.openTest();
 			this.openFolder();
+			this.openFile();
+			this.handleFilePath();
+			this.getSystemInfo();
 		}
 	}
 	miniWindow() {
@@ -30,33 +36,14 @@ class IpcMainManage {
 		});
 	}
 
-	/**
-	 * 将当前链行数据转换为对象类型
-	 * @param arr
-	 */
-	transArrToTree(arr: string[]) {
-		const res: { label: string; [key: string]: string | Record<string, unknown> } = {
-			label: '',
-		};
-		let temp: { label: string; [key: string]: string | Record<string, unknown> } = {
-			label: '',
-		};
-		if (arr.length === 1) {
-			res.content = arr[0] as string;
-		}
-		arr.forEach((item: string, index: number) => {
-			if (index === 0) {
-				res.label = item;
-				res[item] = temp;
-			} else {
-				if (index !== arr.length - 1) {
-					temp[item] = {};
-				}
-				temp.label = item;
-				temp = temp[item] as any;
-			}
+	getSystemInfo() {
+		ipcMain.handle('get-system-info', () => {
+			return {
+				cpu: os.cpus(),
+				memory: os.totalmem(),
+				canUseMemory: os.freemem(),
+			};
 		});
-		return res;
 	}
 
 	openFolder() {
@@ -65,56 +52,86 @@ class IpcMainManage {
 				label?: string[];
 				children?: Record<string, any>;
 				[key: string]: any;
-			} = {};
+			}[] = [];
 			const filePath = dialog.showOpenDialogSync(this.curWindow, {
 				title: '请选择文件夹',
-				properties: ['openFile', 'openDirectory'],
+				properties: ['openDirectory'],
 			});
 			if (!filePath) {
 				return '读取文件失败';
 			} else if (Array.isArray(filePath) && filePath.length > 0) {
-				const stats = await fs.statSync(filePath[0]!);
+				const fileContent = await fs.readdirSync(filePath[0]!, {
+					recursive: true,
+				});
 
-				if (stats.isDirectory()) {
-					// 是文件夹 读取文件夹内容
-					const fileContent = await fs.readdirSync(filePath[0]!, {
-						recursive: true,
-					});
-					let splitS = '\\';
-					const curSystem = process.platform;
-					if (curSystem === 'linux') {
-						splitS = '\\';
-					}
+				// 对当前文件结构进行解析
+				fileContent.forEach((element: any) => {
+					const pathArr = element.split(path.sep);
+					let itemRes = transArrToTree(pathArr) as any;
+					let temp: any;
+					let key = filePath[0];
+					while (itemRes?.label) {
+						key += path.sep + itemRes.label;
 
-					// 对当前文件结构进行解析
-					fileContent.forEach((element: any) => {
-						const pathArr = element.split(splitS);
-						const itemRes = this.transArrToTree(pathArr) as any;
-
-						if (itemRes) {
-							if (!res[itemRes.label]) {
-								res[itemRes.label] = {};
+						if (!temp) {
+							let hasStore = res.find((item) => item.label === itemRes.label);
+							if (!hasStore) {
+								res.push(
+									(temp = {
+										label: itemRes.label,
+										key: key,
+										type: itemRes.type,
+										children: [],
+									})
+								);
+							} else {
+								temp = hasStore;
 							}
-							// 找到下一个
-							let child = itemRes[itemRes.label];
-							let temp = res[itemRes.label];
-
-							while (child?.label) {
-								temp.children = temp.children || {};
-								if (!temp.children?.label) {
-									temp.children.label = child.label;
-								}
-								temp.children[child.label] ? (temp = temp.children[child.label]) : (temp.children[child.label] = temp = {});
-								child = child[child.label];
+							itemRes = itemRes[itemRes.label];
+						} else {
+							let hasSet = temp.children.find((item: any) => item.label === itemRes.label);
+							if (!hasSet) {
+								temp.children.push(
+									(hasSet = {
+										label: itemRes.label,
+										key: key,
+										type: itemRes.type,
+										children: [],
+									})
+								);
 							}
+							temp = hasSet;
+							itemRes = itemRes[itemRes.label];
 						}
-					});
-				}
+					}
+				});
 			}
-			fs.writeFileSync('./test.json', JSON.stringify(res, null, 2), 'utf-8');
-			console.log(res, 'file');
 			// 获取文件夹中所有内容
-			return res;
+			return {
+				tree: res,
+				originFile: filePath[0],
+			};
+		});
+	}
+
+	openFile() {
+		ipcMain.handle('open-file', () => {
+			const filePath = dialog.showOpenDialogSync(this.curWindow, {
+				title: '请选择文件',
+				properties: ['openFile', 'multiSelections'],
+			});
+			if (Array.isArray(filePath) && filePath.length > 0) {
+				return filePath.map((item) => {
+					return item.split(path.sep).join('/');
+				});
+			}
+			return [];
+		});
+	}
+
+	handleFilePath() {
+		ipcMain.handle('handle-file-path', (_event, filePath) => {
+			return pathToFileURL(filePath).href;
 		});
 	}
 }

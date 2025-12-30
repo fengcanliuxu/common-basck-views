@@ -25,11 +25,33 @@
 				</div>
 			</el-splitter-panel>
 			<el-splitter-panel :min="200" :size="rightPart">
-				<div v-if="fileList.length === 0" class="w-full h-full" @click="openFolder">
-					文件列表
-					<el-empty description="请拖入视频或者点击打开文件夹" />
+				<div ref="rightPartRef" class="h-full">
+					<div v-if="fileList.length === 0" class="w-full h-full" @click="openFolder">
+						文件列表
+						<el-empty description="请拖入视频或者点击打开文件夹" />
+					</div>
+					<div v-else class="h-full">
+						<el-button @click="openFile">打开文件</el-button>
+						<el-button @click="openFolder">打开文件夹</el-button>
+						<el-tree-v2
+							:height="playTreeHeight"
+							:data="fileList"
+							:highlight-current="true"
+							:props="{
+								value: 'key',
+							}"
+							@node-click="nodeClick"
+						>
+							<template #default="{ node }">
+								{{ node.type }}
+								<el-icon v-if="node.label.endsWith('.mp4')"><ElIconVideoPlay /></el-icon>
+								<el-icon v-else><ElIconFolderOpened /></el-icon>
+
+								<span>{{ node.label }} {{ node.type }}</span>
+							</template>
+						</el-tree-v2>
+					</div>
 				</div>
-				<el-tree-v2 :data="fileList" :highlight-current="true" label> </el-tree-v2>
 			</el-splitter-panel>
 		</el-splitter>
 	</div>
@@ -50,6 +72,9 @@
 	const isShowVisible = ref(true);
 	const videoList = ref<IVideo[]>([]);
 	const fileList = ref<File[]>([]);
+	const playTreeHeight = ref(200);
+	const rightPartEl = useTemplateRef<Element>('rightPartRef');
+	const selectNode = ref('');
 	const leftPart = computed(() => {
 		return isShowVisible.value ? '70%' : '100%';
 	});
@@ -62,11 +87,18 @@
 		isShowVisible.value = !isShowVisible.value;
 	};
 
+	const openFile = async () => {
+		const allFile = await renderUtils.invokeMsg('open-file');
+		console.log(allFile, '当前所有路径');
+	};
+
 	const openFolder = async () => {
 		const folder = await renderUtils.invokeMsg('open-folder');
-		console.log(folder, '当前选择文件');
-		fileList.value = folder;
-		return folder;
+		// 将当前结构转换为树型数组
+		if (Array.isArray(folder.tree)) {
+			fileList.value = folder.tree;
+			console.log(fileList.value, '但其概念树型结构');
+		}
 	};
 
 	const handleDrag = (e: DragEvent) => {
@@ -96,9 +128,32 @@
 			videoPlay.value.play();
 		}
 	};
+
+	const nodeClick = async (data, node) => {
+		const { key, type } = node.data;
+		if (type === 'video') {
+			const formatPath = key.replace(/\\/g, '/'); // 把所有反斜杠\ 替换成 正斜杠/
+			videoPath.value = `atom://${formatPath}`;
+			console.log(`atom://${formatPath}`, '当前地址');
+		}
+	};
+
+	onMounted(() => {
+		const resizeObserver = new ResizeObserver((e: ResizeObserverEntry[]) => {
+			if (Array.isArray(e) && e.length > 0 && e[0]?.contentRect) {
+				playTreeHeight.value = e[0]?.contentRect.height - 50;
+			}
+		});
+		if (rightPartEl.value) {
+			resizeObserver.observe(rightPartEl.value);
+		}
+	});
 </script>
 
 <style lang="less" scoped>
+	.test {
+		border: 1px solid red;
+	}
 	.animation {
 		animation: 2s ease 1s width-trans;
 	}
