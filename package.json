@@ -11,6 +11,7 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@vueuse/core": "^14.1.0",
     "element-plus": "^2.13.0",
     "pinia": "^3.0.4",
     "vue": "^3.5.24",

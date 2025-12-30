@@ -1,41 +1,46 @@
-{
-  "Captures": {
-    "children": {
-      "children": {
-        "label": "desktop.ini",
-        "desktop.ini": {}
-      }
-    }
+[
+  {
+    "label": "Captures",
+    "key": "Captures",
+    "children": []
   },
-  "desktop.ini": {
-    "children": {}
+  {
+    "label": "desktop.ini",
+    "key": "desktop.ini",
+    "children": []
   },
-  "LiveWallpaper": {
-    "children": {
-      "children": {
+  {
+    "label": "LiveWallpaper",
+    "key": "LiveWallpaper",
+    "children": [
+      {
         "label": "7d8ff72c666339a80287e9a321a45685",
-        "7d8ff72c666339a80287e9a321a45685": {
-          "children": {
-            "label": "0.jpg",
-            "0.jpg": {},
-            "1657362497199_cEW8g.mp4": {},
-            "project.json": {}
+        "key": "LiveWallpaper7d8ff72c666339a80287e9a321a45685",
+        "children": [
+          {
+            "label": "1657362497199_cEW8g.mp4",
+            "key": "LiveWallpaper7d8ff72c666339a80287e9a321a456851657362497199_cEW8g.mp4",
+            "children": []
           }
-        },
-        "d11496936663f9b60023d05225578e31": {
-          "children": {
-            "label": "0.jpg",
-            "0.jpg": {},
-            "project.json": {},
-            "test": {
-              "children": {
+        ]
+      },
+      {
+        "label": "d11496936663f9b60023d05225578e31",
+        "key": "LiveWallpaperd11496936663f9b60023d05225578e31",
+        "children": [
+          {
+            "label": "test",
+            "key": "LiveWallpaperd11496936663f9b60023d05225578e31test",
+            "children": [
+              {
                 "label": "1717827735928_Oabz1.mp4",
-                "1717827735928_Oabz1.mp4": {}
+                "key": "LiveWallpaperd11496936663f9b60023d05225578e31test1717827735928_Oabz1.mp4",
+                "children": []
               }
-            }
+            ]
           }
-        }
+        ]
       }
-    }
+    ]
   }
-}
+]

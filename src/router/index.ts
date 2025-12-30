@@ -1,19 +1,11 @@
+import { HomeFilled, Setting, User } from '@element-plus/icons-vue';
 import { createRouter, createWebHashHistory } from 'vue-router';
-import Layout from '../components/Layout.vue';
-import { HomeFilled, User, Setting } from '@element-plus/icons-vue';
 
 const router = createRouter({
 	history: createWebHashHistory(),
 	routes: [
 		{
-			path: '/login',
-			name: 'Login',
-			component: () => import('../views/Login.vue'),
-			meta: { title: '登录', requiresAuth: false },
-		},
-		{
 			path: '/',
-			component: Layout,
 			redirect: '/dashboard',
 			meta: { requiresAuth: true },
 			children: [
@@ -53,18 +45,7 @@ const router = createRouter({
 
 // 路由守卫
 router.beforeEach((to, _from) => {
-	if (to.name === 'float') return true;
-	// 检查路由是否需要认证
-	const requiresAuth = to.matched.some((record) => record.meta.requiresAuth !== false);
-	const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
-
-	if (requiresAuth && !isLoggedIn) {
-		// 未登录，重定向到登录页
-		return { name: 'Login' };
-	} else if (to.path === '/login' && isLoggedIn) {
-		// 已登录，访问登录页时重定向到首页
-		return { name: 'Dashboard' };
-	}
+	// 使用 electron 创建新的窗口
 	return true;
 });
 
