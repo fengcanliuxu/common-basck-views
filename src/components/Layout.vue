@@ -1,6 +1,6 @@
 <template>
 	<div class="admin-container">
-		<el-container style="height: 100vh">
+		<el-container class="w-full h-full">
 			<el-header class="header w-full">
 				<div>WYW工具箱</div>
 				<div class="flex-1 h-full w-full can-drag"></div>
@@ -9,7 +9,7 @@
 					<div class="flex justify-center items-center header-icon h-full" @click="toMini">
 						<el-icon><ElIconSemiSelect /></el-icon>
 					</div>
-					<div class="flex justify-center items-center header-icon h-full">
+					<div class="flex justify-center items-center header-icon h-full" @click="toMax">
 						<el-icon><ElIconFullScreen /></el-icon>
 					</div>
 					<div class="flex justify-center items-center header-icon h-full" @click="closeApp">
@@ -17,22 +17,22 @@
 					</div>
 				</div>
 			</el-header>
-			<el-container class="w-full h-full">
-				<el-header class="header w-full">
-					<div class="flex items-center w-full justify-between">
-						<span>欢迎使用WYW工具箱 {{ route.fullPath }}</span>
-						<div @click="changeTheme">
-							<el-switch v-model="curTheme"></el-switch>
+			<el-main>
+				<el-container class="w-full h-full">
+					<el-header class="header w-full">
+						<div class="flex items-center w-full justify-between">
+							<span>欢迎使用WYW工具箱 {{ route.fullPath }}</span>
+							<div @click="changeTheme">
+								<el-switch v-model="curTheme"></el-switch>
+							</div>
 						</div>
-					</div>
-				</el-header>
-				<el-main class="w-full h-full">
+					</el-header>
 					<router-view class="w-full h-full"></router-view>
-				</el-main>
-				<el-footer>
-					<Footer></Footer>
-				</el-footer>
-			</el-container>
+				</el-container>
+			</el-main>
+			<el-footer>
+				<Footer></Footer>
+			</el-footer>
 		</el-container>
 	</div>
 </template>
@@ -42,6 +42,7 @@
 	import { useRoute, useRouter } from 'vue-router';
 	import { useThemeStore } from '../stores/theme';
 	import Footer from './components/footer.vue';
+	import { el } from 'element-plus/es/locales.mjs';
 
 	const curTheme = ref(false);
 	const isDark = useDark();
@@ -49,6 +50,10 @@
 
 	const toMini = () => {
 		window.renderUtils.sendMsg('to-mini');
+	};
+
+	const toMax = () => {
+		window.renderUtils.sendMsg('to-max');
 	};
 
 	const closeApp = () => {

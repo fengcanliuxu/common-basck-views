@@ -1,39 +1,20 @@
-import { BrowserWindow, ipcMain, type IpcMainEvent, dialog } from 'electron';
+import { BrowserWindow, ipcMain, type IpcMainEvent, dialog, app } from 'electron';
 import fs from 'node:fs';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { transArrToTree } from '../utils';
 import os from 'node:os';
-class IpcMainManage {
-	private curWindow: BrowserWindow;
-	constructor(curWindow: BrowserWindow) {
-		this.curWindow = curWindow;
-
-		if (curWindow) {
-			this.miniWindow();
-			this.closeWindow();
-			this.openTest();
-			this.openFolder();
-			this.openFile();
-			this.handleFilePath();
-			this.getSystemInfo();
-		}
-	}
-	miniWindow() {
-		ipcMain.on('to-mini', (_e: IpcMainEvent) => {
-			// 最小化窗口
-			this.curWindow.minimize();
-		});
-	}
-	closeWindow() {
-		ipcMain.on('close-window', (_e: IpcMainEvent) => {
-			this.curWindow.close();
-		});
-	}
-	openTest() {
-		ipcMain.on('open-test', (e: IpcMainEvent) => {
-			e.sender.openDevTools();
-		});
+import { windowManage } from '../windowManage';
+import WindowSizeManage from './components/windowSizeManage.ts';
+class IpcMainManage extends WindowSizeManage {
+	private hasCreatePath = new Map<String, BrowserWindow>();
+	constructor() {
+		super();
+		this.openFolder();
+		this.openFile();
+		this.handleFilePath();
+		this.getSystemInfo();
+		this.openNewWindow();
 	}
 
 	getSystemInfo() {
@@ -47,13 +28,15 @@ class IpcMainManage {
 	}
 
 	openFolder() {
-		ipcMain.handle('open-folder', async () => {
+		ipcMain.handle('open-folder', async (e) => {
+			const curWindow = BrowserWindow.fromWebContents(e.sender);
+			if (!curWindow) return '读取文件失败';
 			const res: {
 				label?: string[];
 				children?: Record<string, any>;
 				[key: string]: any;
 			}[] = [];
-			const filePath = dialog.showOpenDialogSync(this.curWindow, {
+			const filePath = dialog.showOpenDialogSync(curWindow, {
 				title: '请选择文件夹',
 				properties: ['openDirectory'],
 			});
@@ -115,8 +98,10 @@ class IpcMainManage {
 	}
 
 	openFile() {
-		ipcMain.handle('open-file', () => {
-			const filePath = dialog.showOpenDialogSync(this.curWindow, {
+		ipcMain.handle('open-file', (e) => {
+			const curWindow = BrowserWindow.fromWebContents(e.sender);
+			if (!curWindow) return [];
+			const filePath = dialog.showOpenDialogSync(curWindow, {
 				title: '请选择文件',
 				properties: ['openFile', 'multiSelections'],
 			});
@@ -132,6 +117,26 @@ class IpcMainManage {
 	handleFilePath() {
 		ipcMain.handle('handle-file-path', (_event, filePath) => {
 			return pathToFileURL(filePath).href;
+		});
+	}
+
+	openNewWindow() {
+		ipcMain.on('open-new-window', (_e: IpcMainEvent, url: string) => {
+			if (this.hasCreatePath.has(url)) {
+				this.hasCreatePath.get(url)?.show();
+				return;
+			}
+			const newWin = windowManage.getWindow();
+			newWin.show();
+			newWin.on('closed', () => {
+				this.hasCreatePath.delete(url);
+			});
+			this.hasCreatePath.set(url, newWin);
+			if (app.isPackaged) {
+				newWin.loadFile(path.join(__dirname, '../renderer/index.html'), { hash: '/url' });
+			} else {
+				newWin.webContents.loadURL(`http://localhost:5173/#${url}`);
+			}
 		});
 	}
 }

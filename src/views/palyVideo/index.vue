@@ -5,7 +5,7 @@
 				<div class="w-full h-full">
 					<video class="video w-full" :src="videoPath" autoplay controls ref="videoPlay"></video>
 					<div class="footer-control flex items-center justify-between">
-						<div class="flex">
+						<div class="flex items-center">
 							<div class="icon" @click.prevent="videoStart">
 								<el-icon><ElIconVideoPlay /></el-icon>
 							</div>
@@ -15,6 +15,7 @@
 							<div class="icon ml-1">
 								<el-icon><ElIconCaretRight /></el-icon>
 							</div>
+							<div>播放速度 x{{ curPlayRate }}</div>
 						</div>
 
 						<div class="icon" @click="handleListVisible">
@@ -24,7 +25,7 @@
 					</div>
 				</div>
 			</el-splitter-panel>
-			<el-splitter-panel :min="200" :size="rightPart">
+			<el-splitter-panel :min="200" v-if="isShowVisible">
 				<div ref="rightPartRef" class="h-full">
 					<div v-if="fileList.length === 0" class="w-full h-full" @click="openFolder">
 						文件列表
@@ -63,6 +64,8 @@
 	};
 </script>
 <script setup lang="ts">
+	import { watchSize } from '@/utils';
+
 	interface IVideo {
 		name: string;
 		path: string;
@@ -74,14 +77,10 @@
 	const fileList = ref<File[]>([]);
 	const playTreeHeight = ref(200);
 	const rightPartEl = useTemplateRef<Element>('rightPartRef');
-	const selectNode = ref('');
 	const leftPart = computed(() => {
 		return isShowVisible.value ? '70%' : '100%';
 	});
-
-	const rightPart = computed(() => {
-		return isShowVisible.value ? '30%' : '0';
-	});
+	const curPlayRate = ref(1);
 
 	const handleListVisible = () => {
 		isShowVisible.value = !isShowVisible.value;
@@ -119,9 +118,6 @@
 			}
 		}
 	};
-	const playVideo = (index: number) => {
-		videoPath.value = URL.createObjectURL(fileList.value[index] as File);
-	};
 
 	const videoStart = () => {
 		if (videoPlay.value) {
@@ -138,14 +134,28 @@
 		}
 	};
 
-	onMounted(() => {
-		const resizeObserver = new ResizeObserver((e: ResizeObserverEntry[]) => {
-			if (Array.isArray(e) && e.length > 0 && e[0]?.contentRect) {
-				playTreeHeight.value = e[0]?.contentRect.height - 50;
+	document.addEventListener('keyup', (e) => {
+		console.log(e.code);
+		if (videoPlay.value) {
+			if (e.code === 'KeyC') {
+				curPlayRate.value += 0.1;
+				videoPlay.value.playbackRate = curPlayRate.value;
 			}
-		});
+			if (e.code === 'KeyV') {
+				curPlayRate.value -= 0.1;
+				videoPlay.value.playbackRate = curPlayRate.value;
+			}
+		}
+	});
+
+	onMounted(() => {
 		if (rightPartEl.value) {
-			resizeObserver.observe(rightPartEl.value);
+			const curSize = watchSize({
+				el: rightPartEl.value,
+				onResize(size) {
+					playTreeHeight.value = size.height - 50;
+				},
+			});
 		}
 	});
 </script>

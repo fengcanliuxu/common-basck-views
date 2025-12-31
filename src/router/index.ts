@@ -22,10 +22,10 @@ const router = createRouter({
 					meta: { title: '用户管理', icon: User, requiresAuth: true },
 				},
 				{
-					path: 'setting',
-					name: 'Setting',
-					component: () => import('@/views/Setting.vue'),
-					meta: { title: '设置', icon: Setting, requiresAuth: true },
+					path: 'passwordManage',
+					name: 'passwordManage',
+					component: () => import('@/views/passwordManage/index.vue'),
+					meta: { title: '密码管理', icon: Setting },
 				},
 				{
 					path: 'playVideo',
@@ -44,7 +44,11 @@ const router = createRouter({
 });
 
 // 路由守卫
-router.beforeEach((to, _from) => {
+router.beforeEach((to, from) => {
+	if (from.path !== '/') {
+		renderUtils.sendMsg('open-new-window', to.fullPath);
+		return false;
+	}
 	// 使用 electron 创建新的窗口
 	return true;
 });
