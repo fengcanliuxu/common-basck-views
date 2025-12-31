@@ -4,6 +4,7 @@ import IpcMainManage from './ipcMainManage';
 import ProtocolManage from './protocolManage';
 import createTray from './tray';
 import { iconPath } from './common';
+import { initWindowManage } from './windowManage';
 let mainWindow: BrowserWindow;
 
 const createWindow = () => {
@@ -11,6 +12,8 @@ const createWindow = () => {
 		show: false,
 		frame: false,
 		icon: iconPath,
+		minWidth: 800,
+		minHeight: 600,
 		webPreferences: {
 			preload: path.join(__dirname, '../preload/preload.cjs'),
 		},
@@ -23,7 +26,7 @@ const createWindow = () => {
 
 	mainWindow.once('ready-to-show', () => {
 		mainWindow!.show();
-		new IpcMainManage(mainWindow);
+		new IpcMainManage();
 	});
 	return mainWindow;
 };
@@ -32,6 +35,7 @@ const protoMange = new ProtocolManage();
 
 app.whenReady().then(() => {
 	protoMange.handleVideo();
+	initWindowManage();
 	Menu.setApplicationMenu(null); // null值取消顶部菜单栏
 	createWindow();
 	createTray();
